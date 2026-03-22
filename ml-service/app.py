@@ -44,6 +44,21 @@ def analyze_sentiment(text):
         'confidence': round(abs(polarity), 3)
     }
 
+@app.route('/', methods=['GET'])
+def home():
+    """Home page with service info"""
+    return jsonify({
+        'service': 'Sentiment Analysis ML Service',
+        'version': '1.0.0',
+        'status': 'running',
+        'endpoints': {
+            'health': 'GET /health',
+            'analyze': 'POST /analyze - {"text": "your text here"}',
+            'batch_analyze': 'POST /batch-analyze - {"texts": ["text1", "text2"]}'
+        },
+        'documentation': 'See README.md for more details'
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""

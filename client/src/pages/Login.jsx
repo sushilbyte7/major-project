@@ -54,14 +54,34 @@ const Login = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} method="post">
                     <div style={{ marginBottom: '14px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Email</label>
-                        <input type="email" name="email" value={form.email} onChange={handleChange} required style={inputStyle} placeholder="you@example.com" />
+                        <label htmlFor="email" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                            placeholder="you@example.com"
+                            autoComplete="username email"
+                        />
                     </div>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Password</label>
-                        <input type="password" name="password" value={form.password} onChange={handleChange} required style={inputStyle} placeholder="••••••••" />
+                        <label htmlFor="password" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            value={form.password}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                        />
                     </div>
                     <button type="submit" disabled={loading} style={{
                         width: '100%', background: '#f97316', color: '#fff', border: 'none',
