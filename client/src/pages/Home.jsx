@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import Waves from '@/components/ReactBits/Waves';
+import AnimatedContent from '@/components/ReactBits/AnimatedContent';
 
 const categories = [
-    { name: 'Electrical', icon: '⚡', color: '#fff7ed', cat: 'Electrical' },
-    { name: 'Plumbing', icon: '🔧', color: '#eff6ff', cat: 'Plumbing' },
-    { name: 'Cleaning & Pest Control', icon: '🧹', color: '#f0fdf4', cat: 'Cleaning' },
-    { name: 'AC & Appliance Repair', icon: '❄️', color: '#eff6ff', cat: 'AC Repair' },
-    { name: 'Painting', icon: '🎨', color: '#fdf4ff', cat: 'Painting' },
-    { name: 'Carpentry', icon: '🪚', color: '#fff7ed', cat: 'Carpentry' },
+    { name: 'Electrical', icon: '⚡', color: 'bg-orange-100 text-orange-600', cat: 'Electrical' },
+    { name: 'Plumbing', icon: '🔧', color: 'bg-blue-100 text-blue-600', cat: 'Plumbing' },
+    { name: 'Cleaning & Pest Control', icon: '🧹', color: 'bg-green-100 text-green-600', cat: 'Cleaning' },
+    { name: 'AC & Appliance Repair', icon: '❄️', color: 'bg-cyan-100 text-cyan-600', cat: 'AC Repair' },
+    { name: 'Painting', icon: '🎨', color: 'bg-purple-100 text-purple-600', cat: 'Painting' },
+    { name: 'Carpentry', icon: '🪚', color: 'bg-yellow-100 text-yellow-700', cat: 'Carpentry' },
 ];
 
 const heroImages = [
@@ -18,193 +23,166 @@ const heroImages = [
 
 const Home = () => {
     return (
-        <div style={{ background: '#fff', minHeight: '100vh' }}>
-
+        <div className="bg-background min-h-screen">
             {/* ── HERO SECTION ── */}
-            <section style={{
-                maxWidth: '1200px',
-                margin: '0 auto',
-                padding: '40px 24px 60px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '40px',
-                alignItems: 'start',
-            }}>
-                {/* Left */}
-                <div>
-                    <h1 style={{
-                        fontSize: '42px',
-                        fontWeight: 800,
-                        color: '#111',
-                        lineHeight: 1.2,
-                        letterSpacing: '-1px',
-                        marginBottom: '32px',
-                    }}>
-                        Home services at your<br />
-                        <span style={{ color: '#f97316' }}>doorstep</span>
-                    </h1>
-
-                    {/* Category Box */}
-                    <div style={{
-                        border: '1px solid #eee',
-                        borderRadius: '16px',
-                        padding: '20px',
-                        boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-                    }}>
-                        <p style={{ fontSize: '14px', color: '#888', fontWeight: 500, marginBottom: '16px' }}>
-                            What are you looking for?
-                        </p>
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '12px',
-                        }}>
-                            {categories.map((cat) => (
-                                <Link
-                                    key={cat.name}
-                                    to={`/services?category=${encodeURIComponent(cat.cat)}`}
-                                    style={{ textDecoration: 'none' }}
-                                >
-                                    <div style={{
-                                        background: cat.color,
-                                        borderRadius: '12px',
-                                        padding: '16px 12px',
-                                        textAlign: 'center',
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.15s, box-shadow 0.15s',
-                                        border: '1px solid transparent',
-                                    }}
-                                        onMouseEnter={e => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(249,115,22,0.15)';
-                                            e.currentTarget.style.borderColor = '#fed7aa';
-                                        }}
-                                        onMouseLeave={e => {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.boxShadow = 'none';
-                                            e.currentTarget.style.borderColor = 'transparent';
-                                        }}
-                                    >
-                                        <div style={{ fontSize: '28px', marginBottom: '8px' }}>{cat.icon}</div>
-                                        <p style={{ fontSize: '11.5px', fontWeight: 600, color: '#f97316', lineHeight: 1.3 }}>
-                                            {cat.name}
-                                        </p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                        <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                            <Link to="/services" style={{
-                                color: '#f97316', fontSize: '13px', fontWeight: 600,
-                                textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px'
-                            }}>
-                                View all services →
-                            </Link>
-                        </div>
-                    </div>
+            <section className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[90vh] flex items-center pt-16 pb-20">
+                <div className="absolute inset-0 z-0 opacity-60">
+                    <Waves lineColor="rgba(255, 255, 255, 0.15)" backgroundColor="transparent" />
                 </div>
+                
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        {/* Left Side */}
+                        <div>
+                            <AnimatedContent distance={50} direction="vertical" duration={0.8} ease="power3.out">
+                                <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
+                                    Home services <br />
+                                    at your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">doorstep</span>
+                                </h1>
+                                <p className="text-lg text-slate-300 mb-10 max-w-lg">
+                                    Book verified professionals for cleaning, repair, and maintenance. On-time and hassle-free, backed by our 100% satisfaction guarantee.
+                                </p>
+                            </AnimatedContent>
 
-                {/* Right - Photo Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gridTemplateRows: '1fr 1fr',
-                    gap: '10px',
-                    height: '460px',
-                }}>
-                    {heroImages.map((img, i) => (
-                        <div key={i} style={{
-                            borderRadius: '16px',
-                            overflow: 'hidden',
-                            background: '#f5f5f5',
-                            gridRow: i === 0 ? 'span 2' : 'auto',
-                        }}>
-                            <img
-                                src={img.src}
-                                alt={img.alt}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    display: 'block',
-                                }}
-                            />
+                            <AnimatedContent distance={50} direction="vertical" duration={0.8} delay={0.2}>
+                                {/* Category Box */}
+                                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 shadow-2xl">
+                                    <p className="text-sm text-slate-300 font-medium mb-4">
+                                        What are you looking for?
+                                    </p>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {categories.map((cat) => (
+                                            <Link
+                                                key={cat.name}
+                                                to={`/services?category=${encodeURIComponent(cat.cat)}`}
+                                                className="group"
+                                            >
+                                                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center cursor-pointer transition-all duration-300 hover:bg-white/20 hover:scale-105 hover:shadow-lg">
+                                                    <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 ${cat.color} group-hover:scale-110 transition-transform`}>
+                                                        {cat.icon}
+                                                    </div>
+                                                    <p className="text-[11px] font-semibold text-slate-100 leading-tight">
+                                                        {cat.name}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <div className="mt-5 text-center">
+                                        <Button variant="link" asChild className="text-orange-400 hover:text-orange-300">
+                                            <Link to="/services">
+                                                View all services →
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </AnimatedContent>
                         </div>
-                    ))}
+
+                        {/* Right Side - Photo Grid */}
+                        <AnimatedContent distance={100} direction="horizontal" duration={1} delay={0.3}>
+                            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[500px]">
+                                {heroImages.map((img, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        className={`rounded-3xl overflow-hidden bg-slate-800 border border-white/10 ${i === 0 ? 'row-span-2' : ''}`}
+                                        whileHover={{ scale: 1.02 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                    >
+                                        <img
+                                            src={img.src}
+                                            alt={img.alt}
+                                            className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity duration-300"
+                                            onError={(e) => {
+                                                // Fallback if images don't exist
+                                                e.currentTarget.src = `https://source.unsplash.com/random/400x400/?${img.alt.split(' ')[0]},service`;
+                                            }}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </AnimatedContent>
+                    </div>
                 </div>
             </section>
 
             {/* ── WHY US SECTION ── */}
-            <section style={{ background: '#fafafa', padding: '60px 24px' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#111', marginBottom: '8px', textAlign: 'center' }}>
-                        Why choose <span style={{ color: '#f97316' }}>ServeEase?</span>
-                    </h2>
-                    <p style={{ textAlign: 'center', color: '#888', fontSize: '14px', marginBottom: '40px' }}>
-                        Trusted by thousands of homes across the city
-                    </p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            <section className="py-24 bg-slate-50 relative">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <AnimatedContent distance={20} duration={0.6}>
+                            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
+                                Why choose <span className="text-orange-500">ServeEase?</span>
+                            </h2>
+                            <p className="text-slate-500 font-medium">
+                                Trusted by thousands of homes across the city
+                            </p>
+                        </AnimatedContent>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
                         {[
-                            { icon: '✅', title: 'Verified Professionals', desc: 'Every provider is background-verified and trained' },
-                            { icon: '🕐', title: 'On-Time Service', desc: 'We respect your time. Our pros arrive as scheduled.' },
+                            { icon: '✅', title: 'Verified Professionals', desc: 'Every provider is background-verified and rigorously trained.' },
+                            { icon: '🕐', title: 'On-Time Service', desc: 'We respect your time. Our pros arrive exactly as scheduled.' },
                             { icon: '💯', title: '100% Satisfaction', desc: "Not happy? We'll make it right, no questions asked." },
-                        ].map((item) => (
-                            <div key={item.title} style={{
-                                background: '#fff',
-                                borderRadius: '16px',
-                                padding: '28px 24px',
-                                border: '1px solid #f0f0f0',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                            }}>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>{item.icon}</div>
-                                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>{item.title}</h3>
-                                <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.6 }}>{item.desc}</p>
-                            </div>
+                        ].map((item, idx) => (
+                            <AnimatedContent key={item.title} distance={30} delay={idx * 0.1} duration={0.6}>
+                                <Card className="border-none shadow-lg shadow-slate-200/50 hover:shadow-xl transition-shadow bg-white rounded-3xl overflow-hidden group">
+                                    <CardContent className="p-8 pt-8">
+                                        <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+                                            {item.icon}
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
+                                        <p className="text-slate-500 leading-relaxed text-sm">{item.desc}</p>
+                                    </CardContent>
+                                </Card>
+                            </AnimatedContent>
                         ))}
                     </div>
                 </div>
             </section>
 
             {/* ── HOW IT WORKS ── */}
-            <section style={{ padding: '60px 24px' }}>
-                <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-                    <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#111', marginBottom: '40px' }}>
-                        How it works
-                    </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', position: 'relative' }}>
+            <section className="py-24 bg-white">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+                    <AnimatedContent distance={20}>
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-16">
+                            How it works
+                        </h2>
+                    </AnimatedContent>
+                    
+                    <div className="grid md:grid-cols-3 gap-12 relative">
+                        {/* Connecting Line */}
+                        <div className="hidden md:block absolute top-[26px] left-[15%] right-[15%] h-0.5 bg-orange-100 z-0"></div>
+
                         {[
-                            { num: '1', title: 'Choose a service', desc: 'Browse and pick the service you need' },
-                            { num: '2', title: 'Book a slot', desc: 'Pick a date, time, and verified provider' },
-                            { num: '3', title: 'Relax at home', desc: 'Pro arrives and gets the job done' },
-                        ].map((item) => (
-                            <div key={item.num}>
-                                <div style={{
-                                    width: '52px', height: '52px',
-                                    background: '#f97316', color: '#fff',
-                                    borderRadius: '50%', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '20px', fontWeight: 800,
-                                    margin: '0 auto 16px',
-                                }}>
-                                    {item.num}
+                            { num: '1', title: 'Choose a service', desc: 'Browse and pick the exact service you need' },
+                            { num: '2', title: 'Book a slot', desc: 'Pick a date, time, and your preferred verified provider' },
+                            { num: '3', title: 'Relax at home', desc: 'The pro arrives and gets the job done seamlessly' },
+                        ].map((item, idx) => (
+                            <AnimatedContent key={item.num} distance={30} delay={idx * 0.15}>
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <div className="w-14 h-14 bg-orange-500 text-white rounded-full flex items-center justify-center text-xl font-bold mb-6 shadow-xl shadow-orange-500/30 ring-8 ring-white">
+                                        {item.num}
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
+                                    <p className="text-slate-500 text-sm">{item.desc}</p>
                                 </div>
-                                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>{item.title}</h3>
-                                <p style={{ fontSize: '13px', color: '#888', lineHeight: 1.6 }}>{item.desc}</p>
-                            </div>
+                            </AnimatedContent>
                         ))}
                     </div>
-                    <Link to="/services" style={{
-                        display: 'inline-block', marginTop: '40px',
-                        background: '#f97316', color: '#fff',
-                        textDecoration: 'none', fontWeight: 700,
-                        padding: '14px 36px', borderRadius: '12px',
-                        fontSize: '15px',
-                    }}>
-                        Book a Service Now
-                    </Link>
+                    
+                    <AnimatedContent distance={20} delay={0.4}>
+                        <div className="mt-16">
+                            <Button size="lg" className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-8 h-14 text-base shadow-xl shadow-orange-500/25 hover:-translate-y-1 transition-transform" asChild>
+                                <Link to="/services">
+                                    Book a Service Now
+                                </Link>
+                            </Button>
+                        </div>
+                    </AnimatedContent>
                 </div>
             </section>
-
         </div>
     );
 };
