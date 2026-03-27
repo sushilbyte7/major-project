@@ -1,34 +1,43 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import ReviewModal from '../components/ReviewModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '../context/AuthContext';
 
-const statusBadge = (status) => {
-    const baseClasses = "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5";
-    const map = {
-        Pending: `${baseClasses} bg-amber-50 text-amber-700 border border-amber-200/60`,
-        Approved: `${baseClasses} bg-blue-50 text-blue-700 border border-blue-200/60`,
-        Completed: `${baseClasses} bg-emerald-50 text-emerald-700 border border-emerald-200/60`,
-        Cancelled: `${baseClasses} bg-rose-50 text-rose-700 border border-rose-200/60`,
-    };
-    
-    const icons = {
-        Pending: '⏳',
-        Approved: '👍',
-        Completed: '✅',
-        Cancelled: '❌'
-    };
+const statusConfig = {
+    Pending:   { icon: '⏳', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+    Approved:  { icon: '👍', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' },
+    Completed: { icon: '✅', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+    Cancelled: { icon: '❌', cls: 'bg-rose-50 text-rose-700 border-rose-200',   dot: 'bg-rose-500' },
+};
 
+const StatusBadge = ({ status }) => {
+    const cfg = statusConfig[status] || statusConfig.Pending;
     return (
-        <span className={map[status] || map.Pending}>
-            <span className="text-[10px]">{icons[status] || '•'}</span> {status}
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+            {status}
         </span>
     );
 };
 
+const StatCard = ({ icon, label, value, color }) => (
+    <Card className="border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-5 flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${color}`}>{icon}</div>
+            <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+                <p className="text-2xl font-black text-slate-900">{value}</p>
+            </div>
+        </CardContent>
+    </Card>
+);
+
 const UserDashboard = () => {
+    const { user } = useAuth();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviewModalBooking, setReviewModalBooking] = useState(null);
@@ -38,12 +47,9 @@ const UserDashboard = () => {
         try {
             const { data } = await api.get('/bookings/my');
             setBookings(data);
-
             const { data: reviews } = await api.get('/reviews/my-reviews');
             const reviewMap = {};
-            reviews.forEach(review => {
-                reviewMap[review.booking._id] = review;
-            });
+            reviews.forEach(review => { reviewMap[review.booking._id] = review; });
             setBookingReviews(reviewMap);
         } catch (err) {
             console.error('Error fetching bookings:', err);
@@ -64,131 +70,171 @@ const UserDashboard = () => {
         }
     };
 
+    const stats = {
+        total: bookings.length,
+        pending: bookings.filter(b => b.status === 'Pending').length,
+        completed: bookings.filter(b => b.status === 'Completed').length,
+        upcoming: bookings.filter(b => b.status === 'Approved').length,
+    };
+
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-[70vh]">
-                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+            <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                <p className="text-slate-400 text-sm">Loading your bookings...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 pb-20">
-            {/* Header Area */}
-            <div className="bg-white border-b border-slate-200/60 pt-16 pb-12 mb-10">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-                            My <span className="text-orange-500">Bookings</span>
-                        </h1>
-                        <p className="text-slate-500 text-lg">Manage and track all your scheduled services</p>
+        <div className="min-h-screen bg-slate-50">
+            {/* Page Header */}
+            <div className="bg-white border-b border-slate-200/60">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-500/25">
+                                {user?.name?.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-slate-900">
+                                    Welcome back, <span className="text-orange-500">{user?.name?.split(' ')[0] || 'there'}</span>
+                                </h1>
+                                <p className="text-slate-500 mt-0.5">Track and manage all your service bookings</p>
+                            </div>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <StatCard icon="📋" label="Total" value={stats.total} color="bg-slate-100" />
+                            <StatCard icon="⏳" label="Pending" value={stats.pending} color="bg-amber-50" />
+                            <StatCard icon="📅" label="Upcoming" value={stats.upcoming} color="bg-blue-50" />
+                            <StatCard icon="✅" label="Completed" value={stats.completed} color="bg-emerald-50" />
+                        </div>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Booking List */}
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {bookings.length === 0 ? (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }} 
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm"
+                        className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-300"
                     >
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-                            📅
-                        </div>
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">No active bookings</h3>
-                        <p className="text-slate-500 mb-8 max-w-sm mx-auto">Looks like you haven't booked any services yet. Discover what we can do for your home!</p>
-                        <Button asChild size="lg" className="rounded-full bg-orange-500 hover:bg-orange-600 shadow-xl shadow-orange-500/20">
-                            <a href="/services">Explore Services</a>
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">📅</div>
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">No bookings yet</h3>
+                        <p className="text-slate-500 mb-8 max-w-sm mx-auto">Discover our professional home services and book your first appointment!</p>
+                        <Button asChild size="lg" className="rounded-full bg-orange-500 hover:bg-orange-600 shadow-xl shadow-orange-500/20 px-8">
+                            <Link to="/services">Explore Services →</Link>
                         </Button>
                     </motion.div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-lg font-bold text-slate-800">Your Bookings</h2>
+                            <Button asChild variant="outline" size="sm" className="rounded-xl border-slate-200 font-semibold">
+                                <Link to="/services">+ New Booking</Link>
+                            </Button>
+                        </div>
+
                         <AnimatePresence>
                             {bookings.map((b, idx) => (
                                 <motion.div
                                     key={b._id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                                    transition={{ delay: idx * 0.05 }}
                                 >
-                                    <Card className="overflow-hidden border-slate-200/60 hover:border-slate-300 transition-colors shadow-sm hover:shadow-md">
+                                    <Card className="border-slate-200/60 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden">
                                         <CardContent className="p-0">
                                             <div className="flex flex-col sm:flex-row">
-                                                {/* Left details */}
-                                                <div className="flex-1 p-6 sm:p-8">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <h3 className="text-xl font-bold text-slate-900">{b.service?.name}</h3>
-                                                        <div className="sm:hidden">{statusBadge(b.status)}</div>
+                                                {/* Color accent stripe */}
+                                                <div className={`w-full sm:w-1.5 h-1.5 sm:h-auto flex-shrink-0 ${
+                                                    b.status === 'Completed' ? 'bg-emerald-400' :
+                                                    b.status === 'Approved' ? 'bg-blue-400' :
+                                                    b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
+                                                }`} />
+
+                                                {/* Main Content */}
+                                                <div className="flex-1 p-5 sm:p-6">
+                                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                                        <div>
+                                                            <h3 className="text-lg font-bold text-slate-900">{b.service?.name}</h3>
+                                                            <p className="text-sm text-slate-400 mt-0.5">
+                                                                via {b.provider?.name || 'Provider TBD'}
+                                                            </p>
+                                                        </div>
+                                                        <StatusBadge status={b.status} />
                                                     </div>
-                                                    
-                                                    <div className="grid sm:grid-cols-2 gap-y-3 gap-x-6">
-                                                        <div className="flex items-start gap-3">
-                                                            <span className="text-slate-400 mt-0.5">📅</span>
+
+                                                    <div className="grid sm:grid-cols-3 gap-3">
+                                                        <div className="flex items-center gap-2 text-sm">
+                                                            <span className="text-base">📅</span>
                                                             <div>
-                                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Schedule</p>
-                                                                <p className="text-sm font-medium text-slate-700">{b.date} • {b.time}</p>
+                                                                <p className="text-xs text-slate-400 font-medium">Date & Time</p>
+                                                                <p className="font-semibold text-slate-700">{b.date} • {b.time}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-start gap-3">
-                                                            <span className="text-slate-400 mt-0.5">📍</span>
+                                                        <div className="flex items-center gap-2 text-sm">
+                                                            <span className="text-base">📍</span>
                                                             <div>
-                                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Location</p>
-                                                                <p className="text-sm font-medium text-slate-700 line-clamp-2">{b.address}</p>
+                                                                <p className="text-xs text-slate-400 font-medium">Location</p>
+                                                                <p className="font-semibold text-slate-700 line-clamp-1">{b.address}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-start gap-3">
-                                                            <span className="text-slate-400 mt-0.5">👤</span>
-                                                            <div>
-                                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Professional</p>
-                                                                <p className="text-sm font-medium text-slate-700">{b.provider?.name || 'Assigned soon'} {b.provider?.phone && <span className="text-slate-400 font-normal">({b.provider.phone})</span>}</p>
+                                                        {b.provider?.phone && (
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <span className="text-base">📞</span>
+                                                                <div>
+                                                                    <p className="text-xs text-slate-400 font-medium">Contact</p>
+                                                                    <p className="font-semibold text-slate-700">{b.provider.phone}</p>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
-                                                    
+
                                                     {b.notes && (
-                                                        <div className="mt-5 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Additional Notes</p>
-                                                            <p className="text-sm text-slate-600 italic">{b.notes}</p>
+                                                        <div className="mt-4 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-500 italic">
+                                                            "{b.notes}"
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                {/* Right Actions Panel */}
-                                                <div className="bg-slate-50/50 sm:w-64 border-t sm:border-t-0 sm:border-l border-slate-200/60 p-6 sm:p-8 flex flex-col justify-center gap-4">
-                                                    <div className="hidden sm:block text-right mb-2">
-                                                        {statusBadge(b.status)}
-                                                    </div>
-                                                    
+                                                {/* Action Panel */}
+                                                <div className="border-t sm:border-t-0 sm:border-l border-slate-100 px-5 py-4 sm:w-48 flex sm:flex-col justify-end sm:justify-center gap-3 bg-slate-50/50">
                                                     {(b.status === 'Pending' || b.status === 'Approved') && (
                                                         <Button
                                                             variant="outline"
-                                                            className="w-full text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:text-red-700"
+                                                            size="sm"
                                                             onClick={() => handleCancel(b._id)}
+                                                            className="rounded-xl border-red-200 text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-300 font-semibold"
                                                         >
-                                                            Cancel Booking
+                                                            Cancel
                                                         </Button>
                                                     )}
-                                                    
+
                                                     {b.status === 'Completed' && !bookingReviews[b._id] && (
                                                         <Button
-                                                            className="w-full bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/20"
+                                                            size="sm"
                                                             onClick={() => setReviewModalBooking(b)}
+                                                            className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md shadow-orange-500/20"
                                                         >
-                                                            ⭐ Write a Review
+                                                            ⭐ Review
                                                         </Button>
                                                     )}
-                                                    
+
                                                     {b.status === 'Completed' && bookingReviews[b._id] && (
-                                                        <div className="text-sm text-emerald-700 font-medium px-4 py-2.5 bg-emerald-50 border border-emerald-200/60 rounded-xl flex items-center justify-center gap-2">
-                                                            <span>✓</span> Feedback left
+                                                        <div className="text-xs text-emerald-700 font-bold text-center px-2 py-1.5 bg-emerald-50 rounded-xl border border-emerald-200">
+                                                            ✓ Reviewed
                                                         </div>
                                                     )}
 
                                                     {b.status === 'Cancelled' && (
-                                                        <div className="text-sm text-slate-500 text-center font-medium">
-                                                            Service cancelled by user.
+                                                        <div className="text-xs text-slate-400 font-medium text-center">
+                                                            Cancelled
                                                         </div>
                                                     )}
                                                 </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -11,60 +11,211 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Geist Variable', sans-serif;
   background-color: #f8fafc;
   color: #1e293b;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Status badges - plain CSS (no @apply for v4 compat) */
+/* Premium heading font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', 'Geist Variable', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Premium Button Base ─── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #673ab7 0%, #4f1c9e 100%);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35), 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #7e57c2 0%, #673ab7 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(103, 58, 183, 0.45), 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 2px 8px rgba(103, 58, 183, 0.3);
+}
+
+.btn-primary span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Premium Card ─── */
+.premium-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 12px 40px rgba(0,0,0,0.06);
+  border-color: rgba(103, 58, 183, 0.15);
+}
+
+/* ─── Section spacing ─── */
+.section-padded {
+  padding: 96px 0;
+}
+
+/* ─── Page container ─── */
+.page-container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* ─── Gradient Text utility ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #673ab7 0%, #4f1c9e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Input premium focus ─── */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #673ab7 !important;
+  box-shadow: 0 0 0 3px rgba(103, 58, 183, 0.12) !important;
+}
+
+/* ─── Status badges ─── */
 .badge-pending {
-  background: #fef9c3;
-  color: #854d0e;
-  padding: 2px 10px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 3px 12px;
   border-radius: 9999px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   display: inline-block;
 }
 
 .badge-approved {
-  background: #dbeafe;
-  color: #1e40af;
-  padding: 2px 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 3px 12px;
   border-radius: 9999px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   display: inline-block;
 }
 
 .badge-completed {
-  background: #dcfce7;
-  color: #166534;
-  padding: 2px 10px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 3px 12px;
   border-radius: 9999px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   display: inline-block;
 }
 
 .badge-cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 2px 10px;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  padding: 3px 12px;
   border-radius: 9999px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   display: inline-block;
 }
 
+/* ─── Shimmer loading effect ─── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --color-primary: #4f1c9e;
+  --color-primary-container: #673ab7;
+  --color-primary-fixed: #ebddff;
+  --color-on-primary: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-background: #f8f9fa;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-container-highest: #e1e3e4;
+  --color-outline: #7b7484;
+  --color-outline-variant: #ccc3d5;
+  --color-on-surface: #191c1d;
+  --color-on-surface-variant: #4a4453;
+  --font-headline: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Outfit', var(--font-sans);
+  --font-sans: 'Inter', 'Geist Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -112,7 +263,7 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.647 0.196 47.5);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -123,21 +274,21 @@ body {
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.647 0.196 47.5);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.7rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.647 0.196 47.5);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.647 0.196 47.5);
 }
 
 .dark {
@@ -147,8 +298,8 @@ body {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.647 0.196 47.5);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -158,7 +309,7 @@ body {
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.647 0.196 47.5);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -166,12 +317,12 @@ body {
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.647 0.196 47.5);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.647 0.196 47.5);
 }
 
 @layer base {
