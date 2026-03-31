@@ -15,8 +15,8 @@ const CATEGORIES = ['Electrical', 'Plumbing', 'Cleaning', 'Carpentry', 'Painting
 const STATUSES = ['Pending', 'Approved', 'Completed', 'Cancelled'];
 
 const statusCls = {
-    Pending:   'bg-amber-50 text-amber-700 border-amber-200',
-    Approved:  'bg-blue-50 text-blue-700 border-blue-200',
+    Pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    Approved: 'bg-blue-50 text-blue-700 border-blue-200',
     Completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     Cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
 };
@@ -174,9 +174,8 @@ const AdminDashboard = () => {
                         <button
                             key={id}
                             onClick={() => setTab(id)}
-                            className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
-                                tab === id ? 'text-white' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                            }`}
+                            className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${tab === id ? 'text-white' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                }`}
                         >
                             {tab === id && (
                                 <motion.div
@@ -385,11 +384,10 @@ const AdminDashboard = () => {
                                             <Card className="border-slate-200/60 hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
                                                 <CardContent className="p-0">
                                                     <div className="flex flex-col sm:flex-row">
-                                                        <div className={`w-full sm:w-1 h-1 sm:h-auto flex-shrink-0 ${
-                                                            b.status === 'Completed' ? 'bg-emerald-400' :
-                                                            b.status === 'Approved' ? 'bg-blue-400' :
-                                                            b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
-                                                        }`} />
+                                                        <div className={`w-full sm:w-1 h-1 sm:h-auto flex-shrink-0 ${b.status === 'Completed' ? 'bg-emerald-400' :
+                                                                b.status === 'Approved' ? 'bg-blue-400' :
+                                                                    b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
+                                                            }`} />
                                                         <div className="flex-1 p-4">
                                                             <div className="flex flex-wrap items-start gap-3 mb-3">
                                                                 <div className="flex-1 min-w-0">
@@ -418,11 +416,10 @@ const AdminDashboard = () => {
                                                                     <button
                                                                         key={s}
                                                                         onClick={() => updateStatus(b._id, s)}
-                                                                        className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all ${
-                                                                            b.status === s
+                                                                        className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all ${b.status === s
                                                                                 ? `${statusCls[s]} shadow-sm`
                                                                                 : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
-                                                                        }`}
+                                                                            }`}
                                                                     >
                                                                         {s}
                                                                     </button>

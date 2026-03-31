@@ -5,7 +5,7 @@ const Booking = require('../models/Booking');
 // @access  Private (User)
 const createBooking = async (req, res) => {
     try {
-        const { service, provider, date, time, address, notes } = req.body;
+        const { service, provider, date, time, address, notes, paymentMethod, paymentStatus } = req.body;
 
         const booking = await Booking.create({
             user: req.user._id,
@@ -15,6 +15,8 @@ const createBooking = async (req, res) => {
             time,
             address,
             notes,
+            paymentMethod: paymentMethod || 'cash',
+            paymentStatus: paymentStatus || 'Pending',
         });
 
         const populated = await booking.populate([

@@ -10,6 +10,22 @@ const STEPS = ['Choose Provider', 'Pick Schedule', 'Address & Notes'];
 
 const TIME_SLOTS = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
+// Load Razorpay SDK dynamically
+const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+        if (document.getElementById('razorpay-sdk')) {
+            resolve(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.id = 'razorpay-sdk';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
+
 const BookingForm = () => {
     const { serviceId } = useParams();
     const navigate = useNavigate();
@@ -17,26 +33,96 @@ const BookingForm = () => {
     const [providers, setProviders] = useState([]);
     const [form, setForm] = useState({ provider: '', date: '', time: '', address: '', notes: '' });
     const [loading, setLoading] = useState(false);
+    const [payLoading, setPayLoading] = useState(false);
     const [error, setError] = useState('');
     const [step, setStep] = useState(0);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         api.get(`/services/${serviceId}`).then(({ data }) => setService(data));
         api.get(`/providers?service=${serviceId}`).then(({ data }) => setProviders(data));
+        loadRazorpayScript();
     }, [serviceId]);
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // Pay After Service — direct booking (cash)
+    const handleCashBooking = async () => {
         setError('');
         setLoading(true);
         try {
-            await api.post('/bookings', { service: serviceId, ...form });
+            await api.post('/bookings', {
+                service: serviceId,
+                ...form,
+                paymentMethod: 'cash',
+                paymentStatus: 'Pending',
+            });
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Booking failed');
             setLoading(false);
+        }
+    };
+
+    // Pay Now — open Razorpay
+    const handleOnlinePayment = async () => {
+        setError('');
+        setPayLoading(true);
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+            setError('Failed to load payment gateway. Check your internet connection.');
+            setPayLoading(false);
+            return;
+        }
+
+        try {
+            // Create Razorpay order on backend
+            const { data } = await api.post('/payment/create-order', {
+                amount: service?.price || 0,
+                currency: 'INR',
+                receipt: `booking_${Date.now()}`,
+            });
+
+            const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
+                name: 'ServeEase',
+                description: `Payment for ${service?.name}`,
+                order_id: data.orderId,
+                theme: { color: '#f97316' },
+                handler: async (response) => {
+                    // Verify payment and create booking
+                    try {
+                        await api.post('/payment/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            bookingData: {
+                                service: serviceId,
+                                ...form,
+                            },
+                        });
+                        navigate('/dashboard');
+                    } catch (err) {
+                        setError(err.response?.data?.message || 'Payment verified but booking failed.');
+                        setPayLoading(false);
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        setPayLoading(false);
+                    },
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.open();
+            setPayLoading(false);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Could not initiate payment. Try again.');
+            setPayLoading(false);
         }
     };
 
@@ -70,11 +156,10 @@ const BookingForm = () => {
                         {STEPS.map((s, i) => (
                             <div key={s} className="flex items-center flex-1">
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                                        i < step ? 'bg-emerald-500 text-white' :
-                                        i === step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' :
-                                        'bg-slate-200 text-slate-500'
-                                    }`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${i < step ? 'bg-emerald-500 text-white' :
+                                            i === step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' :
+                                                'bg-slate-200 text-slate-500'
+                                        }`}>
                                         {i < step ? '✓' : i + 1}
                                     </div>
                                     <span className={`hidden sm:block text-sm font-semibold ${i === step ? 'text-slate-900' : 'text-slate-400'}`}>
@@ -121,11 +206,10 @@ const BookingForm = () => {
                                             key={p._id}
                                             type="button"
                                             onClick={() => setForm({ ...form, provider: p._id })}
-                                            className={`text-left p-5 rounded-2xl border-2 transition-all duration-200 ${
-                                                form.provider === p._id
+                                            className={`text-left p-5 rounded-2xl border-2 transition-all duration-200 ${form.provider === p._id
                                                     ? 'border-orange-400 bg-orange-50/80 shadow-md shadow-orange-200/50'
                                                     : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3 mb-3">
                                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm">
@@ -179,11 +263,10 @@ const BookingForm = () => {
                                                     key={t}
                                                     type="button"
                                                     onClick={() => setForm({ ...form, time: t })}
-                                                    className={`py-2 px-3 rounded-xl text-sm font-semibold transition-all ${
-                                                        form.time === t
+                                                    className={`py-2 px-3 rounded-xl text-sm font-semibold transition-all ${form.time === t
                                                             ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
                                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {t}
                                                 </button>
@@ -231,7 +314,7 @@ const BookingForm = () => {
                             </Card>
 
                             {/* Summary */}
-                            <Card className="border-orange-200 bg-orange-50/50 rounded-2xl">
+                            <Card className="border-orange-200 bg-orange-50/50 rounded-2xl mb-6">
                                 <CardContent className="p-5">
                                     <h3 className="font-bold text-slate-800 mb-3">Booking Summary</h3>
                                     <div className="space-y-2 text-sm">
@@ -242,6 +325,70 @@ const BookingForm = () => {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {/* ✅ PAYMENT OPTIONS */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                            >
+                                <div className="p-5 border-b border-slate-100">
+                                    <h3 className="font-bold text-slate-800 text-base">Choose Payment Option</h3>
+                                    <p className="text-slate-400 text-xs mt-0.5">Select how you'd like to pay for this service</p>
+                                </div>
+
+                                <div className="p-4 grid sm:grid-cols-2 gap-3">
+                                    {/* Pay Now */}
+                                    <button
+                                        type="button"
+                                        onClick={handleOnlinePayment}
+                                        disabled={!form.address || payLoading || loading}
+                                        className="group relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 hover:shadow-lg hover:shadow-orange-200/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-md shadow-orange-400/30 group-hover:scale-105 transition-transform">
+                                            <span className="text-2xl">💳</span>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-bold text-slate-900 text-sm">
+                                                {payLoading ? 'Opening Gateway...' : 'Pay Now'}
+                                            </p>
+                                            <p className="text-xs text-slate-500 mt-0.5">UPI, Cards, Net Banking</p>
+                                        </div>
+                                        {payLoading && (
+                                            <span className="absolute top-3 right-3 w-4 h-4 border-2 border-orange-400/30 border-t-orange-500 rounded-full animate-spin" />
+                                        )}
+                                        <span className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Recommended</span>
+                                    </button>
+
+                                    {/* Pay After Service */}
+                                    <button
+                                        type="button"
+                                        onClick={handleCashBooking}
+                                        disabled={!form.address || loading || payLoading}
+                                        className="group flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                            <span className="text-2xl">🤝</span>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-bold text-slate-900 text-sm">
+                                                {loading ? 'Booking...' : 'Pay After Service'}
+                                            </p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Pay cash when work is done</p>
+                                        </div>
+                                        {loading && (
+                                            <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                                        )}
+                                    </button>
+                                </div>
+
+                                <div className="px-5 pb-4">
+                                    <p className="text-xs text-slate-400 text-center">
+                                        🔒 Payments secured by Razorpay · 256-bit SSL encryption
+                                    </p>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -266,7 +413,7 @@ const BookingForm = () => {
                         </button>
                     )}
 
-                    {step < STEPS.length - 1 ? (
+                    {step < STEPS.length - 1 && (
                         <button
                             type="button"
                             onClick={() => setStep(s => s + 1)}
@@ -275,22 +422,6 @@ const BookingForm = () => {
                         >
                             <span>Continue</span>
                             <span>→</span>
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading || !form.address}
-                            className="flex-1 btn-primary justify-center h-12 rounded-2xl text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-                        >
-                            {loading ? (
-                                <>
-                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Confirming...</span>
-                                </>
-                            ) : (
-                                <><span>✓ Confirm Booking</span></>
-                            )}
                         </button>
                     )}
                 </div>

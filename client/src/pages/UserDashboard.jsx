@@ -8,10 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '../context/AuthContext';
 
 const statusConfig = {
-    Pending:   { icon: '⏳', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    Approved:  { icon: '👍', cls: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' },
+    Pending: { icon: '⏳', cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+    Approved: { icon: '👍', cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
     Completed: { icon: '✅', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    Cancelled: { icon: '❌', cls: 'bg-rose-50 text-rose-700 border-rose-200',   dot: 'bg-rose-500' },
+    Cancelled: { icon: '❌', cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -20,6 +20,23 @@ const StatusBadge = ({ status }) => {
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.cls}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
             {status}
+        </span>
+    );
+};
+
+const PaymentBadge = ({ paymentStatus, paymentMethod }) => {
+    if (paymentStatus === 'Paid' && paymentMethod === 'online') {
+        return (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                <span className="text-base leading-none">✅</span>
+                Payment Done
+            </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200">
+            <span className="text-base leading-none">🤝</span>
+            Pay After Service
         </span>
     );
 };
@@ -152,11 +169,10 @@ const UserDashboard = () => {
                                         <CardContent className="p-0">
                                             <div className="flex flex-col sm:flex-row">
                                                 {/* Color accent stripe */}
-                                                <div className={`w-full sm:w-1.5 h-1.5 sm:h-auto flex-shrink-0 ${
-                                                    b.status === 'Completed' ? 'bg-emerald-400' :
-                                                    b.status === 'Approved' ? 'bg-blue-400' :
-                                                    b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
-                                                }`} />
+                                                <div className={`w-full sm:w-1.5 h-1.5 sm:h-auto flex-shrink-0 ${b.status === 'Completed' ? 'bg-emerald-400' :
+                                                        b.status === 'Approved' ? 'bg-blue-400' :
+                                                            b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
+                                                    }`} />
 
                                                 {/* Main Content */}
                                                 <div className="flex-1 p-5 sm:p-6">
@@ -167,7 +183,10 @@ const UserDashboard = () => {
                                                                 via {b.provider?.name || 'Provider TBD'}
                                                             </p>
                                                         </div>
-                                                        <StatusBadge status={b.status} />
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            <StatusBadge status={b.status} />
+                                                            <PaymentBadge paymentStatus={b.paymentStatus} paymentMethod={b.paymentMethod} />
+                                                        </div>
                                                     </div>
 
                                                     <div className="grid sm:grid-cols-3 gap-3">
