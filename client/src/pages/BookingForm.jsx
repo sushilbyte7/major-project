@@ -138,7 +138,7 @@ const BookingForm = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Top Bar */}
             <div className="bg-white border-b border-slate-200/60">
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
                         <p className="text-orange-500 font-bold text-xs uppercase tracking-widest mb-2">Book Now</p>
                         <h1 className="text-4xl font-bold text-slate-900 mb-1">
@@ -157,8 +157,8 @@ const BookingForm = () => {
                             <div key={s} className="flex items-center flex-1">
                                 <div className="flex items-center gap-2">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${i < step ? 'bg-emerald-500 text-white' :
-                                            i === step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' :
-                                                'bg-slate-200 text-slate-500'
+                                        i === step ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' :
+                                            'bg-slate-200 text-slate-500'
                                         }`}>
                                         {i < step ? '✓' : i + 1}
                                     </div>
@@ -176,7 +176,7 @@ const BookingForm = () => {
             </div>
 
             {/* Step Content */}
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: -8 }}
@@ -207,8 +207,8 @@ const BookingForm = () => {
                                             type="button"
                                             onClick={() => setForm({ ...form, provider: p._id })}
                                             className={`text-left p-5 rounded-2xl border-2 transition-all duration-200 ${form.provider === p._id
-                                                    ? 'border-orange-400 bg-orange-50/80 shadow-md shadow-orange-200/50'
-                                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
+                                                ? 'border-orange-400 bg-orange-50/80 shadow-md shadow-orange-200/50'
+                                                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3 mb-3">
@@ -264,8 +264,8 @@ const BookingForm = () => {
                                                     type="button"
                                                     onClick={() => setForm({ ...form, time: t })}
                                                     className={`py-2 px-3 rounded-xl text-sm font-semibold transition-all ${form.time === t
-                                                            ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
-                                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25'
+                                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                         }`}
                                                 >
                                                     {t}

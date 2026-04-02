@@ -112,34 +112,20 @@ async function seed() {
     const created = await Service.insertMany(services);
     console.log(`✅ ${created.length} services added`);
 
-    // Add 1-2 providers per service
-    const providers = [];
-    for (let i = 0; i < created.length; i++) {
-        const p1 = providerTemplates[i % providerTemplates.length];
-        const p2 = providerTemplates[(i + 1) % providerTemplates.length];
-        providers.push({
-            name: p1.name,
-            phone: p1.phone,
-            email: `${created[i].category.toLowerCase().replace(/\s/g, '')}.${i}@providers.com`,
-            service: created[i]._id,
-            experience: p1.experience,
-            rating: p1.rating,
-            isAvailable: true,
-        });
-        if (i % 2 === 0) {
-            providers.push({
-                name: p2.name,
-                phone: p2.phone,
-                email: `${created[i].category.toLowerCase().replace(/\s/g, '')}.b.${i}@providers.com`,
-                service: created[i]._id,
-                experience: p2.experience,
-                rating: p2.rating,
-                isAvailable: true,
-            });
-        }
-    }
-    await Provider.insertMany(providers);
-    console.log(`✅ ${providers.length} providers added`);
+    // Insert ONLY 6 unique providers — no duplicates
+    // Provider model ke service field ke liye pehli service assign karo (sirf required field hai)
+    const uniqueProviders = providerTemplates.map((p, idx) => ({
+        name: p.name,
+        phone: p.phone,
+        email: p.email,
+        experience: p.experience,
+        rating: p.rating,
+        isAvailable: true,
+        service: created[idx % created.length]._id,
+    }));
+
+    await Provider.insertMany(uniqueProviders);
+    console.log(`✅ ${uniqueProviders.length} unique providers added (no duplicates)`);
 
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('  Seeding complete! 🎉');

@@ -107,7 +107,7 @@ const UserDashboard = () => {
         <div className="min-h-screen bg-slate-50">
             {/* Page Header */}
             <div className="bg-white border-b border-slate-200/60">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-orange-500/25">
@@ -133,7 +133,7 @@ const UserDashboard = () => {
             </div>
 
             {/* Booking List */}
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {bookings.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}

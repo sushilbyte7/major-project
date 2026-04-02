@@ -17,6 +17,7 @@ const providerSchema = new mongoose.Schema(
         phone: {
             type: String,
             required: [true, 'Please add a phone number'],
+            unique: true,   // ← duplicate phone prevent karta hai
             trim: true,
         },
         service: {

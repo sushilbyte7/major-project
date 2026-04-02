@@ -385,8 +385,8 @@ const AdminDashboard = () => {
                                                 <CardContent className="p-0">
                                                     <div className="flex flex-col sm:flex-row">
                                                         <div className={`w-full sm:w-1 h-1 sm:h-auto flex-shrink-0 ${b.status === 'Completed' ? 'bg-emerald-400' :
-                                                                b.status === 'Approved' ? 'bg-blue-400' :
-                                                                    b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
+                                                            b.status === 'Approved' ? 'bg-blue-400' :
+                                                                b.status === 'Cancelled' ? 'bg-rose-400' : 'bg-amber-400'
                                                             }`} />
                                                         <div className="flex-1 p-4">
                                                             <div className="flex flex-wrap items-start gap-3 mb-3">
@@ -417,8 +417,8 @@ const AdminDashboard = () => {
                                                                         key={s}
                                                                         onClick={() => updateStatus(b._id, s)}
                                                                         className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all ${b.status === s
-                                                                                ? `${statusCls[s]} shadow-sm`
-                                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                                                                            ? `${statusCls[s]} shadow-sm`
+                                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
                                                                             }`}
                                                                     >
                                                                         {s}
