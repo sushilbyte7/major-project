@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const fields = [
-    { label: 'Full Name', name: 'name', type: 'text', placeholder: 'Chandan Kumar', required: true },
+    { label: 'Full Name', name: 'name', type: 'text', placeholder: 'Enter your full name', required: true },
     { label: 'Email', name: 'email', type: 'email', placeholder: 'you@example.com', required: true },
     { label: 'Password', name: 'password', type: 'password', placeholder: '••••••••', required: true },
-    { label: 'Phone', name: 'phone', type: 'tel', placeholder: '9876543210', required: false },
+    { label: 'Phone', name: 'phone', type: 'tel', placeholder: 'Enter your phone number', required: false },
     { label: 'Home Address', name: 'address', type: 'text', placeholder: 'Your home address', required: false },
 ];
+
 
 const Register = () => {
     const [step, setStep] = useState(1); // 1 = registration form, 2 = OTP verify
@@ -22,6 +23,7 @@ const Register = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
+    const [showPassword, setShowPassword] = useState(false);
     const otpRefs = useRef([]);
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -125,7 +127,7 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen flex">
+        <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
             {/* Left — Brand */}
             <motion.div
                 initial={{ opacity: 0, x: -30 }}
@@ -164,8 +166,8 @@ const Register = () => {
             </motion.div>
 
             {/* Right — Form */}
-            <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 overflow-y-auto">
-                <div className="w-full max-w-md py-4">
+            <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 overflow-y-auto">
+                <div className="w-full max-w-md py-2">
                     <Link to="/" className="flex items-center gap-2 mb-10 lg:hidden">
                         <div className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center text-white font-black text-sm">SE</div>
                         <span className="font-bold text-xl text-slate-900">Serve<span className="text-orange-500">Ease</span></span>
@@ -204,15 +206,48 @@ const Register = () => {
                                                 <Label className="text-sm font-bold text-slate-700">
                                                     {field.label} {field.required && <span className="text-orange-500">*</span>}
                                                 </Label>
-                                                <Input
-                                                    type={field.type}
-                                                    name={field.name}
-                                                    value={form[field.name]}
-                                                    onChange={handleChange}
-                                                    required={field.required}
-                                                    placeholder={field.placeholder}
-                                                    className="h-11 rounded-2xl border-slate-200 bg-slate-50 text-sm"
-                                                />
+                                                {field.name === 'password' ? (
+                                                    <div className="relative">
+                                                        <Input
+                                                            type={showPassword ? 'text' : 'password'}
+                                                            name={field.name}
+                                                            value={form[field.name]}
+                                                            onChange={handleChange}
+                                                            required={field.required}
+                                                            placeholder={field.placeholder}
+                                                            className="h-11 rounded-2xl border-slate-200 bg-slate-50 text-sm pr-12"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPassword(v => !v)}
+                                                            className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-700 transition-colors"
+                                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                                        >
+                                                            {showPassword ? (
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                                                </svg>
+                                                            ) : (
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                                    <circle cx="12" cy="12" r="3"/>
+                                                                </svg>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <Input
+                                                        type={field.type}
+                                                        name={field.name}
+                                                        value={form[field.name]}
+                                                        onChange={handleChange}
+                                                        required={field.required}
+                                                        placeholder={field.placeholder}
+                                                        className="h-11 rounded-2xl border-slate-200 bg-slate-50 text-sm"
+                                                    />
+                                                )}
                                             </div>
                                         ))}
                                         <div className="pt-2">

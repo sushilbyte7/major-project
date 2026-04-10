@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        profilePic: {
+            type: String,
+            default: '',
+        },
         isVerified: {
             type: Boolean,
             default: false,
@@ -41,6 +45,7 @@ const userSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
 
 // Hash password before saving
 userSchema.pre('save', async function () {

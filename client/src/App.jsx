@@ -7,6 +7,7 @@ import AdminRoute from './components/AdminRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Services from './pages/Services';
 import BookingForm from './pages/BookingForm';
 import UserDashboard from './pages/UserDashboard';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/services" element={<Services />} />
             <Route path="/provider/:providerId" element={<ProviderDetail />} />
 

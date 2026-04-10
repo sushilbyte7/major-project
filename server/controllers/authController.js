@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 const jwt = require('jsonwebtoken');
-const { sendOTPEmail } = require('../utils/emailService');
+const { sendOTPEmail, sendForgotPasswordOTPEmail } = require('../utils/emailService');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -141,4 +141,104 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, verifyEmail, login };
+// @desc    Forgot Password - Step 1: Send OTP to email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        const user = await User.findOne({ email, isVerified: true });
+        if (!user) {
+            return res.status(404).json({ message: 'No verified account found with this email' });
+        }
+
+        // Generate OTP
+        const otp = generateOTP();
+
+        // Delete old reset OTPs for this email
+        await OTP.deleteMany({ email, purpose: 'reset' });
+
+        // Save OTP with purpose flag
+        await OTP.create({ email, otp, purpose: 'reset' });
+
+        // Send OTP email
+        await sendForgotPasswordOTPEmail(email, otp, user.name);
+
+        res.json({ message: 'Password reset OTP sent to your email.', email });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Forgot Password - Step 2: Verify OTP
+// @route   POST /api/auth/verify-reset-otp
+// @access  Public
+const verifyForgotOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+
+        const otpRecord = await OTP.findOne({ email, purpose: 'reset' });
+        if (!otpRecord) {
+            return res.status(400).json({ message: 'OTP expired or not found. Please request again.' });
+        }
+
+        if (otpRecord.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+        }
+
+        // OTP verified — delete it and issue a short-lived reset token
+        await OTP.deleteMany({ email, purpose: 'reset' });
+
+        const resetToken = jwt.sign({ email, purpose: 'reset' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+        res.json({ message: 'OTP verified successfully.', resetToken });
+    } catch (error) {
+        console.error('Verify reset OTP error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Forgot Password - Step 3: Reset password using reset token
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+    try {
+        const { resetToken, newPassword } = req.body;
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({ message: 'Token and new password are required' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        // Verify reset token
+        let decoded;
+        try {
+            decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        } catch {
+            return res.status(400).json({ message: 'Reset link expired. Please start again.' });
+        }
+
+        if (decoded.purpose !== 'reset') {
+            return res.status(400).json({ message: 'Invalid reset token.' });
+        }
+
+        const user = await User.findOne({ email: decoded.email }).select('+password');
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+
+        // Update password (pre-save hook will hash it)
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password reset successfully. You can now log in.' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { register, verifyEmail, login, forgotPassword, verifyForgotOTP, resetPassword };

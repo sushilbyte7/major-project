@@ -32,11 +32,19 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('serveease_token');
     };
 
+    // Update user data in context + localStorage (after profile edit)
+    const updateUser = (updatedFields) => {
+        const merged = { ...user, ...updatedFields };
+        setUser(merged);
+        localStorage.setItem('serveease_user', JSON.stringify(merged));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading, isAdmin: user?.role === 'admin' }}>
+        <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading, isAdmin: user?.role === 'admin' }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

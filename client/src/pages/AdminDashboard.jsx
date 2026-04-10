@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '../context/AuthContext';
 
 const TABS = [
     { id: 'Services', icon: '🛠️' },
@@ -39,11 +41,208 @@ const FeedbackMsg = ({ msg }) => {
     );
 };
 
+// ─── Eye Icons ───
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+);
+const EyeOffIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+);
+
+// ─── Admin Profile Panel ───
+const ProfilePanel = ({ onClose }) => {
+    const { user, updateUser } = useAuth();
+    const fileInputRef = useRef();
+    const [tab, setTab] = useState('info');
+    const [form, setForm] = useState({ name: user?.name || '', profilePic: user?.profilePic || '' });
+    const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [showCurrent, setShowCurrent] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
+    const [preview, setPreview] = useState(user?.profilePic || '');
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { setError('Image must be under 2MB'); return; }
+        const reader = new FileReader();
+        reader.onloadend = () => { setPreview(reader.result); setForm(f => ({ ...f, profilePic: reader.result })); };
+        reader.readAsDataURL(file);
+    };
+
+    const handleInfoSubmit = async (e) => {
+        e.preventDefault();
+        setError(''); setSuccess('');
+        setSaving(true);
+        try {
+            const { data } = await api.put('/users/profile', { name: form.name, profilePic: form.profilePic });
+            updateUser(data);
+            setSuccess('Profile updated successfully! ✅');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update profile');
+        } finally { setSaving(false); }
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        setError(''); setSuccess('');
+        if (pwForm.newPassword !== pwForm.confirmPassword) { setError('New passwords do not match'); return; }
+        if (pwForm.newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+        setSaving(true);
+        try {
+            const { data } = await api.put('/users/change-password', { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+            setSuccess(data.message + ' ✅');
+            setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to change password');
+        } finally { setSaving(false); }
+    };
+
+    const initials = user?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'A';
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={onClose} />
+            <motion.div
+                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden"
+            >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-5 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-white font-bold text-xl">Admin Profile</h2>
+                        <p className="text-white/60 text-sm">Update your account details</p>
+                    </div>
+                    <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">✕</button>
+                </div>
+
+                {/* Avatar */}
+                <div className="flex flex-col items-center py-6 px-6 border-b border-slate-100 bg-slate-50">
+                    <div className="relative group">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                            {preview ? (
+                                <img src={preview} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-black text-3xl">
+                                    {initials}
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={() => fileInputRef.current?.click()}
+                            className="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 hover:bg-orange-600 rounded-full flex items-center justify-center text-white shadow-md transition-colors" title="Change photo">
+                            📷
+                        </button>
+                    </div>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    <p className="text-xs text-slate-400 mt-3">JPG, PNG or GIF · Max 2MB</p>
+                    {preview && (
+                        <button onClick={() => { setPreview(''); setForm(f => ({ ...f, profilePic: '' })); }} className="text-xs text-red-500 hover:underline mt-1">Remove photo</button>
+                    )}
+                </div>
+
+                {/* Tabs */}
+                <div className="flex border-b border-slate-200">
+                    {[{ id: 'info', label: '👤 Profile Info' }, { id: 'password', label: '🔐 Change Password' }].map(t => (
+                        <button key={t.id} onClick={() => { setTab(t.id); setError(''); setSuccess(''); }}
+                            className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${tab === t.id ? 'text-orange-600 border-b-2 border-orange-500 bg-orange-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    <AnimatePresence mode="wait">
+                        {(success || error) && (
+                            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                className={`rounded-2xl px-4 py-3 text-sm font-medium mb-4 ${success ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                                {success || `⚠️ ${error}`}
+                            </motion.div>
+                        )}
+
+                        {tab === 'info' && (
+                            <motion.form key="info" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handleInfoSubmit} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-slate-700">Full Name</Label>
+                                    <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required placeholder="Admin name"
+                                        className="h-11 rounded-2xl border-slate-200 bg-slate-50" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-slate-700">Email</Label>
+                                    <Input value={user?.email || ''} disabled className="h-11 rounded-2xl border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed" />
+                                    <p className="text-xs text-slate-400">Email cannot be changed</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-slate-700">Role</Label>
+                                    <Input value="Admin" disabled className="h-11 rounded-2xl border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed" />
+                                </div>
+                                <div className="pt-2">
+                                    <button type="submit" disabled={saving}
+                                        className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-2xl transition-colors text-base">
+                                        {saving ? 'Saving...' : 'Save Changes'} {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : '✓'}
+                                    </button>
+                                </div>
+                            </motion.form>
+                        )}
+
+                        {tab === 'password' && (
+                            <motion.form key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                onSubmit={handlePasswordSubmit} className="space-y-4">
+                                {[
+                                    { id: 'currentPassword', label: 'Current Password', show: showCurrent, toggle: () => setShowCurrent(v => !v) },
+                                    { id: 'newPassword', label: 'New Password', show: showNew, toggle: () => setShowNew(v => !v) },
+                                    { id: 'confirmPassword', label: 'Confirm New Password', show: showConfirm, toggle: () => setShowConfirm(v => !v) },
+                                ].map(field => (
+                                    <div key={field.id} className="space-y-1.5">
+                                        <Label className="text-sm font-bold text-slate-700">{field.label}</Label>
+                                        <div className="relative">
+                                            <Input type={field.show ? 'text' : 'password'} value={pwForm[field.id]}
+                                                onChange={e => setPwForm(f => ({ ...f, [field.id]: e.target.value }))}
+                                                required placeholder="••••••••" className="h-11 rounded-2xl border-slate-200 bg-slate-50 pr-11" />
+                                            <button type="button" onClick={field.toggle}
+                                                className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-700 transition-colors">
+                                                {field.show ? <EyeOffIcon /> : <EyeIcon />}
+                                            </button>
+                                        </div>
+                                        {field.id === 'confirmPassword' && pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
+                                            <p className="text-xs text-red-500">⚠️ Passwords do not match</p>
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="pt-2">
+                                    <button type="submit" disabled={saving}
+                                        className="w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-2xl transition-colors text-base"
+                                        style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                                        {saving ? 'Updating...' : 'Update Password'} {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : '🔐'}
+                                    </button>
+                                </div>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.div>
+        </>
+    );
+};
+
 const AdminDashboard = () => {
+    const { user } = useAuth();
     const [tab, setTab] = useState('Services');
     const [services, setServices] = useState([]);
     const [providers, setProviders] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [showProfile, setShowProfile] = useState(false);
 
     const [sForm, setSForm] = useState({ name: '', description: '', category: 'Electrical', price: '', image: '' });
     const [editingSvc, setEditingSvc] = useState(null);
@@ -55,6 +254,8 @@ const AdminDashboard = () => {
 
     const [alerts, setAlerts] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const adminInitials = user?.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'A';
 
     useEffect(() => {
         api.get('/services').then(({ data }) => setServices(data));
@@ -167,25 +368,47 @@ const AdminDashboard = () => {
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="flex items-center justify-between gap-3 mb-6">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center font-black text-sm shadow-lg shadow-orange-500/30">🛡️</div>
+                                {/* Admin Avatar - clickable */}
+                                <button onClick={() => setShowProfile(true)} className="relative group focus:outline-none" title="Edit Profile">
+                                    <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-transparent group-hover:border-orange-400 transition-all shadow-lg shadow-orange-500/30">
+                                        {user?.profilePic ? (
+                                            <img src={user.profilePic} alt="profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-orange-500 flex items-center justify-center font-black text-sm text-white">
+                                                {adminInitials}
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
                                 <div>
                                     <h1 className="text-2xl font-extrabold">Admin Dashboard</h1>
-                                    <p className="text-slate-400 text-sm">Manage services, providers, and bookings</p>
+                                    <p className="text-slate-400 text-sm">Welcome, {user?.name?.split(' ')[0] || 'Admin'}</p>
                                 </div>
                             </div>
-                            {/* Bell Icon */}
-                            <button
-                                onClick={() => { setTab('Alerts'); }}
-                                className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
-                                title="View Alerts"
-                            >
-                                <span className="text-xl">🔔</span>
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg animate-pulse">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* Edit Profile Button */}
+                                <button
+                                    onClick={() => setShowProfile(true)}
+                                    className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-sm font-semibold text-white flex items-center gap-1.5"
+                                    title="Edit Profile"
+                                >
+                                    <span>✏️</span>
+                                    <span className="hidden sm:inline">Profile</span>
+                                </button>
+                                {/* Bell Icon */}
+                                <button
+                                    onClick={() => { setTab('Alerts'); }}
+                                    className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+                                    title="View Alerts"
+                                >
+                                    <span className="text-xl">🔔</span>
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg animate-pulse">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Stats */}
@@ -593,6 +816,10 @@ const AdminDashboard = () => {
                     </motion.div>
                 </AnimatePresence>
             </div>
+            {/* Profile Edit Panel */}
+            <AnimatePresence>
+                {showProfile && <ProfilePanel onClose={() => setShowProfile(false)} />}
+            </AnimatePresence>
         </div>
     );
 };
