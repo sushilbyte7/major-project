@@ -9,6 +9,7 @@ const TABS = [
     { id: 'Services', icon: '🛠️' },
     { id: 'Providers', icon: '👤' },
     { id: 'Bookings', icon: '📋' },
+    { id: 'Alerts', icon: '🚨' },
 ];
 
 const CATEGORIES = ['Electrical', 'Plumbing', 'Cleaning', 'Carpentry', 'Painting', 'AC Repair', 'Other'];
@@ -52,15 +53,36 @@ const AdminDashboard = () => {
     const [editingProv, setEditingProv] = useState(null);
     const [pMsg, setPMsg] = useState('');
 
+    const [alerts, setAlerts] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
     useEffect(() => {
         api.get('/services').then(({ data }) => setServices(data));
         api.get('/providers').then(({ data }) => setProviders(data));
         api.get('/bookings').then(({ data }) => setBookings(data));
+        api.get('/alerts').then(({ data }) => {
+            setAlerts(data.alerts || []);
+            setUnreadCount(data.unreadCount || 0);
+        }).catch(() => {});
     }, []);
 
     const reloadServices = () => api.get('/services').then(({ data }) => setServices(data));
     const reloadProviders = () => api.get('/providers').then(({ data }) => setProviders(data));
     const reloadBookings = () => api.get('/bookings').then(({ data }) => setBookings(data));
+    const reloadAlerts = () => api.get('/alerts').then(({ data }) => {
+        setAlerts(data.alerts || []);
+        setUnreadCount(data.unreadCount || 0);
+    }).catch(() => {});
+
+    const markAsRead = async (id) => {
+        await api.put(`/alerts/${id}/read`);
+        reloadAlerts();
+    };
+
+    const markAllRead = async () => {
+        await api.put('/alerts/read-all');
+        reloadAlerts();
+    };
 
     const handleSvcSubmit = async (e) => {
         e.preventDefault();
@@ -143,12 +165,27 @@ const AdminDashboard = () => {
             <div className="bg-slate-900 text-white">
                 <div className="page-container py-10">
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center font-black text-sm shadow-lg shadow-orange-500/30">🛡️</div>
-                            <div>
-                                <h1 className="text-2xl font-extrabold">Admin Dashboard</h1>
-                                <p className="text-slate-400 text-sm">Manage services, providers, and bookings</p>
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center font-black text-sm shadow-lg shadow-orange-500/30">🛡️</div>
+                                <div>
+                                    <h1 className="text-2xl font-extrabold">Admin Dashboard</h1>
+                                    <p className="text-slate-400 text-sm">Manage services, providers, and bookings</p>
+                                </div>
                             </div>
+                            {/* Bell Icon */}
+                            <button
+                                onClick={() => { setTab('Alerts'); }}
+                                className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+                                title="View Alerts"
+                            >
+                                <span className="text-xl">🔔</span>
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-black rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg animate-pulse">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
                         </div>
 
                         {/* Stats */}
@@ -186,6 +223,12 @@ const AdminDashboard = () => {
                             )}
                             <span className="relative z-10">{icon}</span>
                             <span className="relative z-10">{id}</span>
+                            {/* Badge on Alerts tab */}
+                            {id === 'Alerts' && unreadCount > 0 && (
+                                <span className="relative z-10 bg-red-500 text-white text-xs font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                                    {unreadCount}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -433,6 +476,118 @@ const AdminDashboard = () => {
                                     ))}
                                     {bookings.length === 0 && <div className="text-center py-16 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">No bookings found.</div>}
                                 </div>
+                            </div>
+                        )}
+                        {/* ====== ALERTS TAB ====== */}
+                        {tab === 'Alerts' && (
+                            <div>
+                                <div className="flex items-center justify-between mb-5">
+                                    <div>
+                                        <h2 className="font-bold text-slate-800 text-lg">🚨 ML Alert Center</h2>
+                                        <p className="text-slate-400 text-sm">Auto-generated by Sentiment Analysis & Rating Monitor</p>
+                                    </div>
+                                    {alerts.some(a => !a.isRead) && (
+                                        <button
+                                            onClick={markAllRead}
+                                            className="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-4 py-2 rounded-xl transition-all"
+                                        >
+                                            ✅ Mark All Read
+                                        </button>
+                                    )}
+                                </div>
+
+                                {alerts.length === 0 ? (
+                                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
+                                        <div className="text-5xl mb-3">✅</div>
+                                        <p className="text-slate-500 font-semibold">No alerts! All providers are doing great.</p>
+                                        <p className="text-slate-400 text-sm mt-1">Alerts appear when a review has low rating (≤2⭐) or negative sentiment.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {alerts.map((alert, idx) => {
+                                            const alertColors = {
+                                                both: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-500', label: '⭐ Low Rating + 😠 Negative' },
+                                                low_rating: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-500', label: '⭐ Low Rating' },
+                                                negative_sentiment: { bg: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-500', label: '😠 Negative Sentiment' },
+                                            };
+                                            const color = alertColors[alert.alertType] || alertColors.low_rating;
+                                            const stars = '⭐'.repeat(alert.rating) + '☆'.repeat(5 - alert.rating);
+
+                                            return (
+                                                <motion.div
+                                                    key={alert._id}
+                                                    initial={{ opacity: 0, y: 8 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.04 }}
+                                                >
+                                                    <Card className={`border rounded-2xl overflow-hidden transition-all ${ alert.isRead ? 'border-slate-200 opacity-70' : `${color.border} shadow-sm` }`}>
+                                                        <CardContent className="p-0">
+                                                            <div className="flex">
+                                                                {/* Left accent bar */}
+                                                                <div className={`w-1 flex-shrink-0 ${alert.isRead ? 'bg-slate-200' : color.badge}`} />
+                                                                <div className="flex-1 p-4">
+                                                                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                                                                        <div className="flex-1 min-w-0">
+                                                                            {/* Alert type badge */}
+                                                                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                                                                                <span className={`text-xs font-bold text-white px-2.5 py-0.5 rounded-full ${alert.isRead ? 'bg-slate-400' : color.badge}`}>
+                                                                                    {color.label}
+                                                                                </span>
+                                                                                {!alert.isRead && (
+                                                                                    <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full animate-pulse">NEW</span>
+                                                                                )}
+                                                                            </div>
+
+                                                                            {/* Provider + rating */}
+                                                                            <div className="flex items-center gap-3 mb-1">
+                                                                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                                                                    {alert.provider?.name?.charAt(0) || '?'}
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className="font-bold text-slate-900 text-sm">{alert.provider?.name || 'Unknown Provider'}</p>
+                                                                                    <p className="text-xs text-slate-500">{stars} {alert.rating}/5 stars</p>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* ML Result */}
+                                                                            <div className="flex items-center gap-2 mb-2">
+                                                                                <span className="text-xs text-slate-500">🤖 ML Sentiment:</span>
+                                                                                <span className={`text-xs font-bold capitalize ${ alert.sentiment === 'negative' ? 'text-red-600' : alert.sentiment === 'positive' ? 'text-emerald-600' : 'text-amber-600' }`}>
+                                                                                    {alert.sentiment} (score: {alert.sentimentScore})
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {/* Review comment */}
+                                                                            {alert.commentPreview && (
+                                                                                <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mb-2">
+                                                                                    <p className="text-xs text-slate-600 italic">"{alert.commentPreview}"</p>
+                                                                                </div>
+                                                                            )}
+
+                                                                            <p className="text-xs text-slate-400">
+                                                                                {new Date(alert.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        {/* Mark as read button */}
+                                                                        {!alert.isRead && (
+                                                                            <button
+                                                                                onClick={() => markAsRead(alert._id)}
+                                                                                className="text-xs font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all flex-shrink-0"
+                                                                            >
+                                                                                Mark Read
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </motion.div>

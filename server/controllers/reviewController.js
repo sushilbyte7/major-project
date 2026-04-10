@@ -1,7 +1,9 @@
 const Review = require('../models/Review');
 const Booking = require('../models/Booking');
 const Provider = require('../models/Provider');
+const Alert = require('../models/Alert');
 const axios = require('axios');
+const { sendAlertEmail } = require('../utils/emailService');
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001';
 
@@ -78,6 +80,48 @@ const createReview = async (req, res) => {
 
         // Update provider's average rating
         await updateProviderRating(booking.provider);
+
+        // ─── ML Alert System ─────────────────────────────────────────
+        const isLowRating = rating <= 2;
+        const isNegativeSentiment = sentimentResult.sentiment === 'negative';
+
+        if (isLowRating || isNegativeSentiment) {
+            const alertType = (isLowRating && isNegativeSentiment) ? 'both'
+                : isLowRating ? 'low_rating'
+                : 'negative_sentiment';
+
+            // Get provider name for email
+            const provider = await Provider.findById(booking.provider);
+            const providerName = provider ? provider.name : 'Unknown Provider';
+
+            // Save alert in DB
+            try {
+                await Alert.create({
+                    provider: booking.provider,
+                    review: review._id,
+                    alertType,
+                    rating,
+                    sentiment: sentimentResult.sentiment,
+                    sentimentScore: sentimentResult.score,
+                    commentPreview: comment.substring(0, 200)
+                });
+
+                // Send email to admin
+                await sendAlertEmail({
+                    providerName,
+                    rating,
+                    sentiment: sentimentResult.sentiment,
+                    sentimentScore: sentimentResult.score,
+                    comment: comment.substring(0, 200),
+                    alertType
+                });
+
+                console.log(`🚨 Alert created & email sent for provider: ${providerName}`);
+            } catch (alertErr) {
+                console.error('Alert creation error (non-critical):', alertErr.message);
+            }
+        }
+        // ─────────────────────────────────────────────────────────────
 
         // Populate review data
         const populatedReview = await Review.findById(review._id)

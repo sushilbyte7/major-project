@@ -81,4 +81,101 @@ const sendOTPEmail = async (toEmail, otp, userName) => {
     await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOTPEmail };
+// Send Admin Alert Email (Low Rating / Negative Sentiment)
+const sendAlertEmail = async (alertData) => {
+    const { providerName, rating, sentiment, sentimentScore, comment, alertType } = alertData;
+
+    const transporter = createTransporter();
+
+    const alertTypeLabel =
+        alertType === 'both' ? '⭐ Low Rating + 😠 Negative Sentiment' :
+            alertType === 'low_rating' ? '⭐ Low Rating' :
+                '😠 Negative Sentiment';
+
+    const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+
+    const mailOptions = {
+        from: `"ServeEase Alerts" <${process.env.EMAIL_FROM}>`,
+        to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM,
+        subject: `🚨 Provider Alert: ${alertTypeLabel} - ${providerName}`,
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>ServeEase Admin Alert</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#f8fafc; font-family: 'Segoe UI', Arial, sans-serif;">
+                <div style="max-width:560px; margin:40px auto; background:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #dc2626, #991b1b); padding:36px 40px 28px; text-align:center;">
+                        <div style="display:inline-block; background:rgba(255,255,255,0.2); border-radius:16px; padding:10px 20px; margin-bottom:16px;">
+                            <span style="color:#fff; font-weight:900; font-size:18px; letter-spacing:1px;">SE</span>
+                        </div>
+                        <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:700;">🚨 Provider Alert</h1>
+                        <p style="color:rgba(255,255,255,0.8); margin:6px 0 0; font-size:14px;">ServeEase ML Monitoring System</p>
+                    </div>
+
+                    <!-- Alert Type Badge -->
+                    <div style="background:#fef2f2; border-bottom:1px solid #fecaca; padding:14px 20px; text-align:center;">
+                        <div style="display:inline-flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center;">
+                            ${alertType === 'low_rating' || alertType === 'both' ? `<span style="background:#f59e0b; color:#fff; font-size:12px; font-weight:700; padding:5px 12px; border-radius:999px; white-space:nowrap;">⭐ Low Rating</span>` : ''}
+                            ${alertType === 'negative_sentiment' || alertType === 'both' ? `<span style="background:#dc2626; color:#fff; font-size:12px; font-weight:700; padding:5px 12px; border-radius:999px; white-space:nowrap;">😠 Negative Sentiment</span>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div style="padding:36px 40px;">
+                        <p style="color:#64748b; font-size:15px; margin:0 0 24px; line-height:1.6;">
+                            Our <strong>ML Sentiment Analysis</strong> system has flagged a concern. Immediate review recommended.
+                        </p>
+
+                        <!-- Provider Info -->
+                        <div style="background:#f8fafc; border-radius:16px; padding:24px; margin-bottom:20px; border:1px solid #e2e8f0;">
+                            <h3 style="color:#0f172a; font-size:16px; margin:0 0 16px; font-weight:700;">📋 Alert Details</h3>
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr>
+                                    <td style="color:#64748b; font-size:14px; padding:6px 0; width:40%;">Provider</td>
+                                    <td style="color:#0f172a; font-size:14px; font-weight:600; padding:6px 0;">${providerName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#64748b; font-size:14px; padding:6px 0;">Rating</td>
+                                    <td style="color:#0f172a; font-size:14px; font-weight:600; padding:6px 0;">${stars} (${rating}/5)</td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#64748b; font-size:14px; padding:6px 0;">ML Sentiment</td>
+                                    <td style="color:#dc2626; font-size:14px; font-weight:700; padding:6px 0; text-transform:capitalize;">${sentiment} (score: ${sentimentScore})</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Review Comment -->
+                        <div style="background:#fff7ed; border-left:4px solid #f97316; border-radius:8px; padding:16px 20px; margin-bottom:28px;">
+                            <p style="color:#9a3412; font-size:12px; font-weight:700; margin:0 0 8px; text-transform:uppercase; letter-spacing:1px;">Customer Review</p>
+                            <p style="color:#431407; font-size:14px; margin:0; line-height:1.6; font-style:italic;">"${comment}"</p>
+                        </div>
+
+                        <p style="color:#94a3b8; font-size:13px; margin:0; line-height:1.6;">
+                            🔍 Please login to the Admin Dashboard to review and take appropriate action.
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:20px 40px; text-align:center;">
+                        <p style="color:#cbd5e1; font-size:12px; margin:0;">
+                            © 2026 ServeEase · Automated ML Alert System
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendOTPEmail, sendAlertEmail };
+

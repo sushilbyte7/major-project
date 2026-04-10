@@ -29,8 +29,9 @@ async function seedAdmin() {
         // Check if admin already exists
         const existing = await User.findOne({ email: 'admin@serveease.com' });
         if (existing) {
-            // Make sure role is admin
+            // Make sure role is admin and email is verified
             existing.role = 'admin';
+            existing.isVerified = true;
             await existing.save();
             console.log('✅ Existing user updated to admin role');
         } else {
@@ -42,6 +43,7 @@ async function seedAdmin() {
                 email: 'admin@serveease.com',
                 password: hashedPassword,
                 role: 'admin',
+                isVerified: true,
                 phone: '9999999999',
                 address: 'ServeEase HQ',
             });
